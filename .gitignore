@@ -1,0 +1,15 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Firebase Admin credentials
+secure-credentials/
+**/*firebase-adminsdk*.json
+
+# Build output
+dist/
+node_modules/
+
+# Logs
+*.log

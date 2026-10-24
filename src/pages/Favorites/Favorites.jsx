@@ -1,0 +1,637 @@
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { Link } from "react-router-dom";
+
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "motion/react";
+
+import {
+  ArrowLeft,
+  ArrowUpLeft,
+  BookOpen,
+  ChevronLeft,
+  Compass,
+  Heart,
+  Search,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
+
+import { formatPrice } from "../../data/books.js";
+import { useLiveCatalog } from "../../hooks/useLiveCatalog.js";
+
+import {
+  useShop,
+} from "../../context/ShopContext.jsx";
+
+import BookCard from "../../components/BookCard/BookCard.jsx";
+
+import "./Favorites.css";
+
+const normalize = (value = "") =>
+  value
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670ـ]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .trim();
+
+export default function Favorites() {
+  const { books, categories, revision } = useLiveCatalog();
+  const {
+    favorites,
+    toggleFavorite,
+    addToCart,
+  } = useShop();
+
+  const reduced = useReducedMotion();
+
+  const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState("newest");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const previous = document.title;
+    document.title = "الكتب المفضلة | بوصلة";
+
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  /* FAVORITE BOOKS */
+
+  const favoriteBooks = useMemo(
+    () =>
+      books.filter((book) =>
+        favorites.includes(book.id)
+      ),
+    [favorites, revision]
+  );
+
+  /* CATEGORY COUNTS */
+
+  const availableCategories = categories.filter(
+    (item) =>
+      item.id === "all" ||
+      favoriteBooks.some(
+        (book) => book.categoryId === item.id
+      )
+  );
+
+  /* FILTER AND SORT */
+
+  const visibleBooks = useMemo(() => {
+    const words = normalize(search)
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const list = favoriteBooks.filter((book) => {
+      const matchesCategory =
+        category === "all" ||
+        book.categoryId === category;
+
+      const matchesSearch = words.every((word) =>
+        normalize(
+          `${book.title} ${book.author}`
+        ).includes(word)
+      );
+
+      return matchesCategory && matchesSearch;
+    });
+
+    if (sort === "newest") {
+      list.sort(
+        (a, b) =>
+          favorites.indexOf(b.id) -
+          favorites.indexOf(a.id)
+      );
+    }
+
+    if (sort === "oldest") {
+      list.sort(
+        (a, b) =>
+          favorites.indexOf(a.id) -
+          favorites.indexOf(b.id)
+      );
+    }
+
+    if (sort === "price-asc") {
+      list.sort(
+        (a, b) => a.price - b.price
+      );
+    }
+
+    if (sort === "price-desc") {
+      list.sort(
+        (a, b) => b.price - a.price
+      );
+    }
+
+    return list;
+  }, [
+    favoriteBooks,
+    category,
+    search,
+    sort,
+    favorites,
+  ]);
+
+  /* SUGGESTIONS */
+
+  const suggestions = books
+    .filter(
+      (book) =>
+        !favorites.includes(book.id)
+    )
+    .slice(0, 4);
+
+  function resetFilters() {
+    setCategory("all");
+    setSort("newest");
+    setSearch("");
+  }
+
+  return (
+    <main
+      id="main-content"
+      className="favorites-page"
+    >
+      {/* HERO */}
+
+      <section className="favorites-hero">
+        <div className="container">
+          <nav
+            className="favorites-breadcrumb"
+            aria-label="مسار الصفحة"
+          >
+            <Link to="/">الرئيسية</Link>
+            <ChevronLeft size={15} />
+            <span aria-current="page">
+              المفضلة
+            </span>
+          </nav>
+
+          <div className="favorites-hero-layout">
+            <motion.div
+              initial={
+                reduced
+                  ? false
+                  : { opacity: 0, y: 25 }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{ duration: 0.65 }}
+            >
+              <p className="favorites-eyebrow">
+                <Sparkles size={17} />
+                مجموعتك الخاصة
+              </p>
+
+              <h1>
+                كتب لفتت
+                <br />
+                <span>قلبك وفضولك.</span>
+              </h1>
+
+              <p className="favorites-hero-description">
+                لكل قارئ قائمة يحتفظ بها.
+                هنا تجد الكتب التي أحببتها
+                وتريد العودة إليها يومًا ما.
+              </p>
+
+              <Link
+                to="/books"
+                className="favorites-hero-link"
+              >
+                استكشف المزيد من الكتب
+                <ArrowUpLeft size={19} />
+              </Link>
+            </motion.div>
+
+            {/* HEART VISUAL */}
+
+            <motion.div
+              className="favorites-hero-art"
+              initial={
+                reduced
+                  ? false
+                  : {
+                      opacity: 0,
+                      scale: 0.85,
+                    }
+              }
+              animate={{
+                opacity: 1,
+                scale: 1,
+              }}
+              transition={{ duration: 0.8 }}
+              aria-hidden="true"
+            >
+              <div className="favorites-hero-ring" />
+
+              <div className="favorites-hero-heart">
+                <Heart
+                  size={103}
+                  strokeWidth={1.1}
+                />
+              </div>
+
+              <div className="favorites-floating-note">
+                <BookOpen size={19} />
+
+                <span>
+                  {favorites.length} كتب تستحق العودة
+                </span>
+              </div>
+
+              <span className="favorites-hero-star">
+                ✦
+              </span>
+
+              <span className="favorites-hero-art-caption">
+                SAVED FOR THE RIGHT MOMENT
+              </span>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* MAIN SECTION */}
+
+      <section className="favorites-content-section">
+        <div className="container">
+
+          <div className="favorites-section-heading">
+            <div>
+              <p className="favorites-eyebrow">
+                <Heart size={17} />
+                رفّي الخاص
+              </p>
+
+              <h2>
+                مختارات <span>القلب.</span>
+              </h2>
+
+              <p>
+                الكتب التي حفظتها لتبقى
+                على بُعد نقرة منك.
+              </p>
+            </div>
+
+            <div className="favorites-total">
+              <strong>
+                {String(favorites.length).padStart(
+                  2,
+                  "0"
+                )}
+              </strong>
+
+              <span>كتب محفوظة</span>
+            </div>
+          </div>
+
+          {/* WHEN FAVORITES EXIST */}
+
+          {favoriteBooks.length > 0 ? (
+            <>
+              {/* TOOLBAR */}
+
+              <div className="favorites-toolbar">
+
+                {/* SEARCH */}
+
+                <div className="favorites-search">
+                  <Search
+                    size={19}
+                    aria-hidden="true"
+                  />
+
+                  <label
+                    htmlFor="favorites-search-input"
+                    className="sr-only"
+                  >
+                    ابحث في المفضلة
+                  </label>
+
+                  <input
+                    id="favorites-search-input"
+                    type="search"
+                    placeholder="ابحث داخل مفضلاتك..."
+                    value={search}
+                    onChange={(event) =>
+                      setSearch(event.target.value)
+                    }
+                  />
+                </div>
+
+                {/* SORT */}
+
+                <div className="favorites-sort">
+                  <label htmlFor="favorites-sort">
+                    ترتيب حسب
+                  </label>
+
+                  <select
+                    id="favorites-sort"
+                    value={sort}
+                    onChange={(event) =>
+                      setSort(event.target.value)
+                    }
+                  >
+                    <option value="newest">
+                      المضافة حديثًا
+                    </option>
+
+                    <option value="oldest">
+                      المضافة قديمًا
+                    </option>
+
+                    <option value="price-asc">
+                      السعر: من الأقل
+                    </option>
+
+                    <option value="price-desc">
+                      السعر: من الأعلى
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              {/* CATEGORIES */}
+
+              <div
+                className="favorites-categories"
+                aria-label="تصنيفات المفضلة"
+              >
+                {availableCategories.map((item) => {
+                  const count =
+                    item.id === "all"
+                      ? favoriteBooks.length
+                      : favoriteBooks.filter(
+                          (book) =>
+                            book.categoryId === item.id
+                        ).length;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={
+                        category === item.id
+                          ? "is-active"
+                          : ""
+                      }
+                      aria-pressed={
+                        category === item.id
+                      }
+                      onClick={() =>
+                        setCategory(item.id)
+                      }
+                    >
+                      {item.label}
+
+                      <span>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* RESULTS */}
+
+              <div className="favorites-results-line">
+                <span>
+                  {visibleBooks.length} كتب في النتائج
+                </span>
+
+                {(category !== "all" || search) && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                  >
+                    مسح التصفية
+                  </button>
+                )}
+              </div>
+
+              {visibleBooks.length > 0 ? (
+                <motion.div
+                  className="favorites-books-grid"
+                  layout={!reduced}
+                >
+                  <AnimatePresence
+                    mode="popLayout"
+                    initial={false}
+                  >
+                    {visibleBooks.map((book) => (
+                      <motion.div
+                        key={book.id}
+                        layout={!reduced}
+                        initial={
+                          reduced
+                            ? false
+                            : {
+                                opacity: 0,
+                                y: 22,
+                                scale: 0.97,
+                              }
+                        }
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.94,
+                          y: -15,
+                        }}
+                        transition={{
+                          duration: reduced ? 0 : 0.38,
+                        }}
+                      >
+                        <BookCard book={book} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              ) : (
+                <div className="favorites-no-results">
+                  <Search size={39} />
+
+                  <h3>لا توجد كتب مطابقة</h3>
+
+                  <p>
+                    جرّب تغيير التصنيف أو عبارة البحث.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={resetFilters}
+                  >
+                    عرض كل المفضلة
+                    <ArrowLeft size={17} />
+                  </button>
+                </div>
+              )}
+
+              {/* FAVORITES TIP */}
+
+              <div className="favorites-info-bar">
+                <Compass
+                  size={22}
+                  strokeWidth={1.2}
+                />
+
+                <p>
+                  يمكنك إزالة أي كتاب من المفضلة
+                  بالضغط على القلب الموجود على بطاقته.
+                </p>
+
+                <Link to="/cart">
+                  انتقل إلى السلة
+                  <ArrowLeft size={16} />
+                </Link>
+              </div>
+            </>
+          ) : (
+            /* EMPTY STATE */
+
+            <motion.div
+              className="favorites-empty"
+              initial={
+                reduced
+                  ? false
+                  : { opacity: 0, y: 25 }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{ duration: 0.55 }}
+            >
+              <div className="favorites-empty-art">
+                <Heart
+                  size={76}
+                  strokeWidth={1}
+                />
+              </div>
+
+              <span className="favorites-empty-kicker">
+                YOUR PERSONAL BOOKSHELF
+              </span>
+
+              <h2>
+                رفّك ينتظر
+                <br />
+                <span>أول كتاب تحبّه.</span>
+              </h2>
+
+              <p>
+                اضغط على أيقونة القلب بجانب
+                أي كتاب في المكتبة، وسنحتفظ
+                به هنا لتعود إليه لاحقًا.
+              </p>
+
+              <Link
+                to="/books"
+                className="button button-primary"
+              >
+                اكتشف الكتب
+                <ArrowUpLeft size={18} />
+              </Link>
+            </motion.div>
+          )}
+
+          {/* RECOMMENDATIONS */}
+
+          {suggestions.length > 0 && (
+            <section
+              className="favorites-discover"
+              aria-labelledby="favorites-discover-title"
+            >
+              <div className="favorites-discover-heading">
+                <div>
+                  <p className="favorites-eyebrow">
+                    <Sparkles size={17} />
+                    المزيد من الاكتشاف
+                  </p>
+
+                  <h2 id="favorites-discover-title">
+                    ربما يستحق مكانًا
+                    <span> في قائمتك.</span>
+                  </h2>
+                </div>
+
+                <Link to="/books">
+                  جميع الكتب
+                  <ArrowLeft size={18} />
+                </Link>
+              </div>
+
+              <motion.div
+                className="favorites-discover-grid"
+                initial={reduced ? false : "hidden"}
+                whileInView="visible"
+                viewport={{
+                  once: true,
+                  amount: 0.12,
+                }}
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.075,
+                    },
+                  },
+                }}
+              >
+                {suggestions.map((book) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                  />
+                ))}
+              </motion.div>
+            </section>
+          )}
+
+          {/* BOTTOM CTA */}
+
+          <div className="favorites-bottom-banner">
+            <div className="favorites-bottom-symbol">
+              <Compass
+                size={33}
+                strokeWidth={1.2}
+              />
+            </div>
+
+            <div>
+              <p>قائمتك تكبر، وفضولك يكبر معها.</p>
+
+              <h2>
+                كتاب جديد، وربما اتجاه جديد.
+              </h2>
+            </div>
+
+            <Link to="/books">
+              استكشف المكتبة
+              <ArrowLeft size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

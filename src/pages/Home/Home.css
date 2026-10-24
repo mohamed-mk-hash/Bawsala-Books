@@ -1,0 +1,1191 @@
+
+/* ==========================================
+   BAWSALA — HOME PAGE
+========================================== */
+
+.b-home {
+  --bh-navy: #182c69;
+  --bh-teal: #008e82;
+  --bh-mint: #00d8bc;
+  --bh-muted: #718292;
+  --bh-line: #e2ecea;
+
+  color: var(--bh-navy);
+  background: #fff;
+  overflow: clip;
+}
+
+.b-home section {
+  scroll-margin-top: 120px;
+}
+
+.b-home a,
+.b-home button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.b-home a:focus-visible,
+.b-home button:focus-visible {
+  outline: 3px solid var(--bh-teal);
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   SHARED
+========================================== */
+
+.b-home-eyebrow,
+.b-home-section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bh-teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.b-home-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 35px;
+}
+
+.b-home-section-header h2 {
+  font-size: clamp(29px, 3.5vw, 46px);
+  line-height: 1.55;
+  letter-spacing: -1px;
+  margin: 11px 0;
+  font-weight: 900;
+}
+
+.b-home-section-header h2 span {
+  color: var(--bh-teal);
+}
+
+.b-home-section-description {
+  color: var(--bh-muted);
+  font-size: 13px;
+  line-height: 2.1;
+}
+
+.b-home-header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bh-teal);
+  color: var(--bh-navy);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: color .2s, gap .2s;
+}
+
+.b-home-header-link:hover {
+  color: var(--bh-teal);
+  gap: 16px;
+}
+
+.b-home-button-primary {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 13px;
+  min-height: 51px;
+  padding: 13px 23px;
+  background: var(--bh-navy);
+  color: #fff;
+  border: 1px solid var(--bh-navy);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background .25s,
+    border-color .25s,
+    transform .25s,
+    box-shadow .25s;
+}
+
+.b-home-button-primary:hover {
+  background: var(--bh-teal);
+  border-color: var(--bh-teal);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px #008e8224;
+}
+
+/* ==========================================
+   HERO
+========================================== */
+
+.b-home-hero {
+  background:
+    radial-gradient(
+      ellipse at 18% 52%,
+      #ddf5ed,
+      transparent 49%
+    ),
+    linear-gradient(120deg, #f8fbfa, #f0f8f5);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #e2eeea;
+}
+
+.b-home-hero-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 55px;
+  min-height: 610px;
+}
+
+.b-home-hero-content {
+  position: relative;
+  z-index: 2;
+  padding-block: 65px;
+}
+
+.b-home-hero h1 {
+  font-size: clamp(44px, 5.2vw, 75px);
+  font-weight: 900;
+  letter-spacing: -2.7px;
+  line-height: 1.42;
+  margin: 20px 0;
+}
+
+.b-home-hero h1 span {
+  color: var(--bh-teal);
+}
+
+.b-home-hero-description {
+  max-width: 460px;
+  font-size: 14px;
+  color: #6c7e8d;
+  line-height: 2.3;
+}
+
+.b-home-hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 21px;
+  margin-top: 29px;
+}
+
+.b-home-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--bh-navy);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.b-home-button-secondary:hover {
+  color: var(--bh-teal);
+}
+
+.b-home-hero-signature {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 51px;
+  color: #83969b;
+  font-size: 11px;
+}
+
+.b-home-signature-line {
+  width: 27px;
+  height: 1px;
+  background: var(--bh-teal);
+}
+
+.b-home-hero-scene {
+  position: relative;
+  min-height: 570px;
+  isolation: isolate;
+}
+
+.b-home-hero-orbit {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed #50b8a84b;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.b-home-hero-orbit-2 {
+  width: 350px;
+  height: 350px;
+  border-style: solid;
+  opacity: .65;
+}
+
+.b-home-hero-book {
+  position: absolute;
+  width: 35%;
+  max-width: 185px;
+  filter: drop-shadow(12px 21px 10px #102e3524);
+}
+
+.b-home-hero-book .book-cover {
+  width: 100%;
+}
+
+.b-home-hero-book-1 {
+  top: 22%;
+  left: 5%;
+  transform: rotate(-15deg);
+  z-index: 1;
+}
+
+.b-home-hero-book-2 {
+  top: 18%;
+  right: 9%;
+  transform: rotate(12deg);
+  z-index: 2;
+}
+
+.b-home-hero-book-3 {
+  top: 29%;
+  left: 34%;
+  transform: rotate(-2deg);
+  z-index: 3;
+}
+
+.b-home-hero-seal {
+  position: absolute;
+  z-index: 4;
+  bottom: 65px;
+  right: 8%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1px solid #e1ebe8;
+  border-radius: 10px;
+  background: #ffffffed;
+  box-shadow: 0 12px 35px #142c4220;
+}
+
+.b-home-hero-seal svg {
+  color: var(--bh-teal);
+}
+
+.b-home-hero-seal span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #83939e;
+  font-size: 9px;
+}
+
+.b-home-hero-seal strong {
+  font-size: 11px;
+  color: var(--bh-navy);
+}
+
+.b-home-hero-decoration {
+  position: absolute;
+  top: 55px;
+  left: 70px;
+  font-size: 40px;
+  color: var(--bh-teal);
+}
+
+.b-home-hero-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  max-width: 1250px;
+  margin-inline: auto;
+  padding: 0 24px 20px;
+}
+
+.b-home-hero-bottom > span {
+  font: 9px sans-serif;
+  letter-spacing: 2px;
+  color: #829aa1;
+}
+
+.b-home-hero-bottom a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bh-teal);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ==========================================
+   MARQUEE
+========================================== */
+
+.b-home-marquee {
+  overflow: hidden;
+  background: var(--bh-navy);
+  color: #fff;
+  padding: 18px 0;
+}
+
+.b-home-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: bh-marquee 35s linear infinite;
+}
+
+.b-home-marquee-group {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-shrink: 0;
+  padding-inline: 30px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.b-home-marquee-group span {
+  color: #4de3cc;
+  font-size: 21px;
+}
+
+@keyframes bh-marquee {
+  to {
+    transform: translateX(50%);
+  }
+}
+
+.b-home-marquee:hover .b-home-marquee-track {
+  animation-play-state: paused;
+}
+
+/* ==========================================
+   CATEGORIES
+========================================== */
+
+.b-home-categories-section {
+  padding: 95px 0 100px;
+  background: #fff;
+}
+
+.b-home-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 19px;
+}
+
+.b-home-category-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  padding: 24px;
+  background: #f6f9f7;
+  border: 1px solid #e7eeeb;
+  border-radius: 12px;
+  transition:
+    background .3s,
+    border-color .3s,
+    box-shadow .3s,
+    transform .3s;
+}
+
+.b-home-category-card:hover {
+  background: #eaf8f2;
+  border-color: #a8dfd1;
+  box-shadow: 0 16px 35px #182c690a;
+  transform: translateY(-5px);
+}
+
+.b-home-category-top {
+  display: flex;
+  justify-content: space-between;
+  color: #89a09e;
+  font: 11px sans-serif;
+}
+
+.b-home-category-top svg {
+  color: var(--bh-teal);
+}
+
+.b-home-category-symbol {
+  color: var(--bh-teal);
+  font-size: 44px;
+  text-align: center;
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+.b-home-category-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.b-home-category-bottom h3 {
+  font-size: 18px;
+}
+
+.b-home-category-bottom > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #718d87;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ==========================================
+   FOUR FEATURED BOOKS ONLY
+========================================== */
+
+.b-home-books-section {
+  padding: 95px 0 85px;
+  background: #f6f9fa;
+  border-block: 1px solid #e5eeee;
+}
+
+.b-home-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 25px;
+  align-items: start;
+}
+
+/* Ensure cards fit the four-column layout */
+
+.b-home-featured-grid .book-card {
+  min-width: 0;
+}
+
+.b-home-featured-grid .book-card__visual {
+  overflow: hidden;
+}
+
+/* ==========================================
+   ALL BOOKS CTA
+========================================== */
+
+.b-home-explore-all {
+  margin-top: 48px;
+  padding: 29px 33px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  background: #fff;
+  border: 1px solid #dae8e4;
+  border-radius: 13px;
+  box-shadow: 0 10px 30px #172a4808;
+}
+
+.b-home-explore-copy {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+}
+
+.b-home-explore-icon {
+  width: 65px;
+  height: 65px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--bh-teal);
+  background: #e5f6ef;
+}
+
+.b-home-explore-copy > div:last-child > span {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--bh-teal);
+}
+
+.b-home-explore-copy h3 {
+  font-size: 20px;
+  margin: 6px 0;
+  line-height: 1.6;
+}
+
+.b-home-explore-copy p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: #798a93;
+}
+
+.b-home-explore-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 15px 22px;
+  border-radius: 8px;
+  background: var(--bh-navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    transform .25s,
+    background .25s,
+    box-shadow .25s;
+}
+
+.b-home-explore-button:hover {
+  background: var(--bh-teal);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px #008e8220;
+}
+
+.b-home-books-note {
+  text-align: center;
+  color: #95a1a8;
+  font-size: 10px;
+  line-height: 1.9;
+  margin-top: 22px;
+}
+
+/* ==========================================
+   SPOTLIGHT
+========================================== */
+
+.b-home-spotlight-section {
+  padding: 100px 0;
+  background: #fff;
+}
+
+.b-home-spotlight-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(35px, 6vw, 95px);
+}
+
+.b-home-spotlight-visual {
+  position: relative;
+  min-height: 510px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at center,
+      #d9f3e9,
+      #eef5f1 65%,
+      #f4f8f6
+    );
+}
+
+.b-home-spotlight-orbit {
+  position: absolute;
+  width: 370px;
+  height: 370px;
+  border-radius: 50%;
+  border: 1px dashed #59b3a44f;
+}
+
+.b-home-spotlight-book {
+  width: min(49%, 255px);
+  transform: rotate(-5deg);
+  z-index: 1;
+  filter: drop-shadow(15px 25px 14px #183e3625);
+}
+
+.b-home-spotlight-book .book-cover {
+  width: 100%;
+}
+
+.b-home-spotlight-stamp {
+  position: absolute;
+  bottom: 35px;
+  right: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 15px;
+  background: #fff;
+  border-radius: 7px;
+  color: var(--bh-teal);
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 12px 25px #182c690c;
+}
+
+.b-home-spotlight-content h2 {
+  font-size: clamp(33px, 3.9vw, 54px);
+  line-height: 1.6;
+  letter-spacing: -1px;
+  margin: 16px 0 20px;
+}
+
+.b-home-spotlight-content h2 span {
+  color: var(--bh-teal);
+}
+
+.b-home-spotlight-rule {
+  width: 70px;
+  height: 2px;
+  background: var(--bh-teal);
+  margin: 20px 0 26px;
+}
+
+.b-home-spotlight-label {
+  font-size: 11px;
+  color: var(--bh-teal);
+  font-weight: 800;
+}
+
+.b-home-spotlight-content h3 {
+  font-size: 27px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+
+.b-home-spotlight-author {
+  color: #84929e;
+  font-size: 12px;
+}
+
+.b-home-spotlight-description {
+  color: #617482;
+  font-size: 14px;
+  line-height: 2.2;
+  margin: 22px 0;
+  max-width: 480px;
+}
+
+.b-home-spotlight-price {
+  display: block;
+  font-size: 27px;
+  font-weight: 900;
+  margin-bottom: 26px;
+}
+
+.b-home-spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.b-home-spotlight-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.b-home-spotlight-details:hover {
+  color: var(--bh-teal);
+}
+
+/* ==========================================
+   READING MOODS
+========================================== */
+
+.b-home-moods-section {
+  padding: 95px 0;
+  background: #f6f9f8;
+  border-block: 1px solid #e5eeee;
+}
+
+.b-home-moods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 21px;
+}
+
+.b-home-mood-card {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid #e2ebe8;
+  transition:
+    transform .3s,
+    box-shadow .3s,
+    background .3s,
+    border-color .3s;
+}
+
+.b-home-mood-card:hover {
+  transform: translateY(-7px);
+  border-color: #b4dfd4;
+  box-shadow: 0 20px 40px #1329430d;
+  background: #eff9f5;
+}
+
+.b-home-mood-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #95a6a7;
+  font: 11px sans-serif;
+  margin-bottom: 34px;
+}
+
+.b-home-mood-top > span:last-child {
+  font-size: 40px;
+  color: var(--bh-teal);
+}
+
+.b-home-mood-card h3 {
+  font-size: 22px;
+  line-height: 1.6;
+  margin-bottom: 7px;
+}
+
+.b-home-mood-card p {
+  font-size: 13px;
+  color: #738592;
+  line-height: 2;
+}
+
+.b-home-mood-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 25px;
+  color: var(--bh-teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ==========================================
+   PHILOSOPHY
+========================================== */
+
+.b-home-philosophy {
+  background:
+    radial-gradient(
+      circle at 15% 40%,
+      #1b6573,
+      transparent 47%
+    ),
+    #182c69;
+  color: #fff;
+  overflow: hidden;
+}
+
+.b-home-philosophy-inner {
+  display: grid;
+  grid-template-columns: 1fr .7fr;
+  align-items: center;
+  gap: 50px;
+  min-height: 425px;
+}
+
+.b-home-philosophy-content {
+  padding-block: 70px;
+}
+
+.b-home-philosophy-content > p:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #8ee9d9;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.b-home-philosophy h2 {
+  font-size: clamp(34px, 4vw, 55px);
+  line-height: 1.65;
+  margin: 15px 0;
+}
+
+.b-home-philosophy h2 span {
+  color: #8deedc;
+}
+
+.b-home-philosophy-description {
+  color: #c8dae3;
+  font-size: 14px;
+  line-height: 2.3;
+  max-width: 510px;
+}
+
+.b-home-philosophy-content > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  margin-top: 25px;
+  border: 1px solid #ffffff60;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  transition: background .2s;
+}
+
+.b-home-philosophy-content > a:hover {
+  background: #ffffff20;
+}
+
+.b-home-philosophy-art {
+  position: relative;
+  min-height: 370px;
+  display: grid;
+  place-items: center;
+  color: #8be9d8;
+}
+
+.b-home-philosophy-ring {
+  position: absolute;
+  width: 315px;
+  height: 315px;
+  border: 1px dashed #ffffff40;
+  border-radius: 50%;
+}
+
+.b-home-philosophy-ring::after {
+  content: "";
+  position: absolute;
+  inset: 36px;
+  border: 1px solid #ffffff22;
+  border-radius: 50%;
+}
+
+.b-home-philosophy-quote {
+  position: absolute;
+  top: 60px;
+  left: 35px;
+  opacity: .4;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 1000px) {
+  .b-home-hero-layout {
+    gap: 20px;
+  }
+
+  .b-home-hero h1 {
+    font-size: 52px;
+  }
+
+  .b-home-hero-scene {
+    min-height: 490px;
+  }
+
+  .b-home-hero-orbit {
+    width: 380px;
+    height: 380px;
+  }
+
+  .b-home-hero-orbit-2 {
+    width: 290px;
+    height: 290px;
+  }
+
+  .b-home-featured-grid {
+    gap: 16px;
+  }
+
+  .b-home-spotlight-layout {
+    gap: 35px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 760px) {
+  .b-home-hero-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 0;
+  }
+
+  .b-home-hero-content {
+    padding: 55px 0 10px;
+  }
+
+  .b-home-hero h1 {
+    font-size: clamp(40px, 8vw, 56px);
+    letter-spacing: -1.3px;
+  }
+
+  .b-home-hero-scene {
+    min-height: 450px;
+    max-width: 530px;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .b-home-hero-book {
+    max-width: 155px;
+  }
+
+  .b-home-hero-seal {
+    bottom: 24px;
+  }
+
+  .b-home-categories-section,
+  .b-home-books-section,
+  .b-home-moods-section {
+    padding: 60px 0;
+  }
+
+  .b-home-categories-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+  }
+
+  .b-home-featured-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 23px 15px;
+  }
+
+  .b-home-explore-all {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 35px;
+  }
+
+  .b-home-explore-button {
+    width: 100%;
+  }
+
+  .b-home-spotlight-section {
+    padding: 60px 0;
+  }
+
+  .b-home-spotlight-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .b-home-spotlight-visual {
+    min-height: 435px;
+  }
+
+  .b-home-spotlight-content h2 {
+    font-size: 38px;
+  }
+
+  .b-home-moods-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .b-home-mood-card {
+    min-height: 225px;
+  }
+
+  .b-home-mood-top {
+    margin-bottom: 18px;
+  }
+
+  .b-home-philosophy-inner {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .b-home-philosophy-content {
+    padding: 60px 0 0;
+  }
+
+  .b-home-philosophy-art {
+    min-height: 260px;
+  }
+
+  .b-home-philosophy-ring {
+    width: 230px;
+    height: 230px;
+  }
+
+  .b-home-philosophy-art > svg:not(.b-home-philosophy-quote) {
+    width: 85px;
+  }
+}
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
+@media (max-width: 480px) {
+  .b-home-hero-description {
+    font-size: 12px;
+  }
+
+  .b-home-hero-actions {
+    gap: 17px;
+  }
+
+  .b-home-button-primary {
+    padding: 12px 17px;
+    font-size: 11px;
+  }
+
+  .b-home-hero-scene {
+    min-height: 355px;
+  }
+
+  .b-home-hero-orbit {
+    width: 300px;
+    height: 300px;
+  }
+
+  .b-home-hero-orbit-2 {
+    width: 230px;
+    height: 230px;
+  }
+
+  .b-home-hero-book {
+    width: 35%;
+    max-width: 120px;
+  }
+
+  .b-home-hero-book-1 {
+    left: 5%;
+    top: 20%;
+  }
+
+  .b-home-hero-book-2 {
+    right: 6%;
+    top: 19%;
+  }
+
+  .b-home-hero-book-3 {
+    left: 32%;
+    top: 28%;
+  }
+
+  .b-home-hero-seal {
+    padding: 9px 12px;
+    right: 1%;
+    bottom: 15px;
+  }
+
+  .b-home-hero-bottom {
+    padding-inline: 16px;
+  }
+
+  .b-home-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 25px;
+  }
+
+  .b-home-section-header h2 {
+    font-size: 29px;
+  }
+
+  .b-home-section-description {
+    font-size: 11px;
+  }
+
+  .b-home-header-link {
+    font-size: 11px;
+  }
+
+  .b-home-category-card {
+    padding: 17px;
+    min-height: 175px;
+  }
+
+  .b-home-category-bottom h3 {
+    font-size: 14px;
+  }
+
+  .b-home-category-symbol {
+    font-size: 32px;
+  }
+
+  .b-home-featured-grid {
+    gap: 20px 11px;
+  }
+
+  .b-home-explore-all {
+    padding: 20px;
+  }
+
+  .b-home-explore-copy {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .b-home-explore-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .b-home-explore-icon svg {
+    width: 23px;
+  }
+
+  .b-home-explore-copy h3 {
+    font-size: 16px;
+  }
+
+  .b-home-explore-copy p {
+    font-size: 10px;
+  }
+
+  .b-home-spotlight-visual {
+    min-height: 365px;
+  }
+
+  .b-home-spotlight-orbit {
+    width: 270px;
+    height: 270px;
+  }
+
+  .b-home-spotlight-content h2 {
+    font-size: 32px;
+  }
+
+  .b-home-spotlight-content h3 {
+    font-size: 23px;
+  }
+
+  .b-home-spotlight-description {
+    font-size: 12px;
+  }
+
+  .b-home-mood-card h3 {
+    font-size: 19px;
+  }
+
+  .b-home-philosophy h2 {
+    font-size: 31px;
+  }
+
+  .b-home-philosophy-description {
+    font-size: 12px;
+  }
+}
+
+/* ==========================================
+   REDUCED MOTION
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .b-home *,
+  .b-home *::before,
+  .b-home *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

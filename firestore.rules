@@ -1,0 +1,111 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ADMIN IDENTIFICATION */
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(
+          /databases/$(database)/documents/adminUsers/$(request.auth.uid)
+        );
+    }
+
+    /* ADMIN REGISTRY */
+
+    match /adminUsers/{uid} {
+      allow read, write: if false;
+    }
+
+    /* BOOKS */
+
+    match /books/{id} {
+      allow get, list:
+        if isAdmin() ||
+        resource.data.isPublished == true;
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* BLOG */
+
+    match /blogs/{id} {
+      allow get, list:
+        if isAdmin() ||
+        resource.data.status == 'published';
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* PUBLIC STORE SETTINGS */
+
+    match /publicConfig/{id} {
+      allow get:
+        if id == 'store';
+
+      allow list, create, update, delete:
+        if false;
+    }
+
+    /* WEBSITE CONTENT */
+
+    match /websiteContent/{id} {
+      allow get:
+        if id == 'main' || isAdmin();
+
+      allow list, create, update, delete:
+        if isAdmin();
+    }
+
+    /* PRIVATE ADMIN SETTINGS */
+
+    match /settings/{id} {
+      allow read, write:
+        if isAdmin();
+    }
+
+    /* CUSTOMER ORDERS */
+
+    match /orders/{id} {
+      allow read, create, delete:
+        if isAdmin();
+
+      allow update:
+        if isAdmin() &&
+        !(
+          resource.data.status == 'cancelled' &&
+          request.resource.data.status != 'cancelled'
+        );
+    }
+
+    /* CONTACT MESSAGES */
+
+    match /contactMessages/{id} {
+      allow read, write:
+        if isAdmin();
+    }
+
+    /* ANALYTICS */
+
+    match /analytics/{id} {
+      allow read, write:
+        if isAdmin();
+    }
+
+    /* SYSTEM */
+
+    match /system/{id} {
+      allow read, write:
+        if isAdmin();
+    }
+
+    /* DENY EVERYTHING ELSE */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

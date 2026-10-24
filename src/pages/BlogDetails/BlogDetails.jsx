@@ -1,0 +1,619 @@
+
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
+
+import {
+  ArrowLeft,
+  ArrowUpLeft,
+  BookOpen,
+  Check,
+  ChevronLeft,
+  Clock3,
+  Compass,
+  Copy,
+  Feather,
+  Link2,
+  Mail,
+  Share2,
+} from "lucide-react";
+
+import {
+  formatBlogDate,
+  getBlogCategory,
+} from "../../data/blogs.js";
+import { useLiveBlog } from "../../hooks/useLiveBlog.js";
+
+import BlogCard from "../../components/BlogCard/BlogCard.jsx";
+import NotFound from "../NotFound/NotFound.jsx";
+
+import "./BlogDetails.css";
+
+export default function BlogDetails() {
+  const { slug } = useParams();
+  const { posts: blogPosts, revision, text } = useLiveBlog();
+
+  const post = blogPosts.find((entry) => entry.slug === slug);
+
+  const reduced = useReducedMotion();
+
+  const [activeSection, setActiveSection] = useState("");
+  const [progress, setProgress] = useState(0);
+  const [shareNotice, setShareNotice] = useState("");
+
+  const related = useMemo(() => {
+    if (!post) return [];
+
+    const others = blogPosts.filter(
+      (item) => item.slug !== post.slug
+    );
+
+    return [
+      ...others.filter(
+        (item) => item.category === post.category
+      ),
+      ...others.filter(
+        (item) => item.category !== post.category
+      ),
+    ].slice(0, 3);
+  }, [post, revision]);
+
+  /* PAGE TITLE */
+
+  useEffect(() => {
+    if (!post) return;
+
+    const previousTitle = document.title;
+
+    document.title = `${post.title} | مدونة بوصلة`;
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [post, revision]);
+
+  /* READING PROGRESS AND TABLE OF CONTENTS */
+
+  useEffect(() => {
+    if (!post) return;
+
+    setActiveSection(post.sections[0]?.id || "");
+    setProgress(0);
+    setShareNotice("");
+
+    let frame = null;
+
+    const updateProgress = () => {
+      if (frame !== null) return;
+
+      frame = requestAnimationFrame(() => {
+        const article = document.getElementById(
+          "bs-article-content"
+        );
+
+        if (article) {
+          const top =
+            window.scrollY +
+            article.getBoundingClientRect().top;
+
+          const end =
+            top +
+            article.offsetHeight -
+            window.innerHeight * 0.65;
+
+          const range = Math.max(1, end - top);
+
+          setProgress(
+            Math.min(
+              100,
+              Math.max(
+                0,
+                ((window.scrollY - top) / range) * 100
+              )
+            )
+          );
+        }
+
+        frame = null;
+      });
+    };
+
+    window.addEventListener(
+      "scroll",
+      updateProgress,
+      { passive: true }
+    );
+
+    window.addEventListener("resize", updateProgress);
+
+    updateProgress();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (a, b) =>
+              a.boundingClientRect.top -
+              b.boundingClientRect.top
+          );
+
+        if (visible.length) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      {
+        rootMargin: "-140px 0px -55% 0px",
+        threshold: 0,
+      }
+    );
+
+    post.sections.forEach(({ id }) => {
+      const element = document.getElementById(id);
+
+      if (element) observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+
+      window.removeEventListener(
+        "scroll",
+        updateProgress
+      );
+
+      window.removeEventListener(
+        "resize",
+        updateProgress
+      );
+
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [post, revision]);
+
+  /* SHARE FEEDBACK */
+
+  useEffect(() => {
+    if (!shareNotice) return;
+
+    const timeout = setTimeout(
+      () => setShareNotice(""),
+      2800
+    );
+
+    return () => clearTimeout(timeout);
+  }, [shareNotice]);
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(
+        window.location.href
+      );
+
+      setShareNotice("تم نسخ رابط المقال");
+    } catch {
+      setShareNotice(
+        "تعذّر نسخ الرابط؛ انسخه من شريط عنوان المتصفح."
+      );
+    }
+  }
+
+  async function shareArticle() {
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          url,
+        });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setShareNotice(
+            "تعذّرت المشاركة، يمكنك نسخ الرابط."
+          );
+        }
+      }
+    } else {
+      await copyLink();
+    }
+  }
+
+  if (!post) return <NotFound />;
+
+  return (
+    <main id="main-content" className="bs-article-page">
+      {/* READING PROGRESS */}
+
+      <div
+        className="bs-article-progress"
+        role="progressbar"
+        aria-label="التقدم في قراءة المقال"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+      >
+        <span style={{ width: `${progress}%` }} />
+      </div>
+
+      {/* ARTICLE HERO */}
+
+      <section
+        className="bs-article-hero"
+        aria-labelledby="bs-article-title"
+      >
+        <div className="container bs-article-hero__inner">
+          <nav
+            aria-label="مسار الصفحة"
+            className="bs-article-breadcrumb"
+          >
+            <Link to="/">الرئيسية</Link>
+            <ChevronLeft size={14} />
+            <Link to="/blog">المدونة</Link>
+            <ChevronLeft size={14} />
+
+            <span aria-current="page">
+              {getBlogCategory(post.category).label}
+            </span>
+          </nav>
+
+          <motion.div
+            initial={
+              reduced
+                ? false
+                : { opacity: 0, y: 24 }
+            }
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="bs-article-tag">
+              <Feather size={16} />
+
+              {getBlogCategory(post.category).label}
+            </span>
+
+            <h1 id="bs-article-title">
+              {post.title}
+            </h1>
+
+            <p className="bs-article-deck">
+              {post.excerpt}
+            </p>
+
+            <div className="bs-article-byline">
+              <span className="bs-article-avatar">
+                <Compass size={23} />
+              </span>
+
+              <span className="bs-article-byline__author">
+                <strong>{post.author}</strong>
+                <small>{text("blogDetails.article.authorRole", "كتابة وتحرير")}</small>
+              </span>
+
+              <span className="bs-article-divider" />
+
+              <span>
+                {formatBlogDate(post.publishedAt)}
+              </span>
+
+              <span className="bs-article-divider" />
+
+              <span className="bs-article-reading">
+                <Clock3 size={16} />
+                {post.readMinutes} {text("blogDetails.article.readingTime", "دقائق قراءة")}
+              </span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* COVER IMAGE */}
+
+      <div className="container bs-article-cover-wrap">
+        <motion.figure
+          className="bs-article-cover"
+          initial={
+            reduced
+              ? false
+              : {
+                  opacity: 0,
+                  y: 22,
+                  scale: 0.98,
+                }
+          }
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.7,
+            delay: 0.1,
+          }}
+        >
+          <img
+            src={post.image}
+            alt={post.imageAlt}
+            fetchPriority="high"
+            style={{
+              objectPosition:
+                post.imagePosition || "center",
+            }}
+            onError={(event) => {
+              event.currentTarget.style.opacity = "0";
+            }}
+          />
+
+          <figcaption>
+            من مدونة بوصلة — كل صورة نافذة إلى قصة
+          </figcaption>
+        </motion.figure>
+      </div>
+
+      {/* ARTICLE CONTENT */}
+
+      <section
+        className="container bs-article-layout"
+        aria-label="محتوى المقال"
+      >
+        {/* TABLE OF CONTENTS */}
+
+        <aside
+          className="bs-article-sidebar"
+          aria-label="فهرس المقال ومشاركته"
+        >
+          <div className="bs-article-sidebar__inner">
+            <p className="bs-article-sidebar__eyebrow">
+              في هذا المقال
+            </p>
+
+            <nav aria-label="أقسام المقال">
+              {post.sections.map((section, index) => (
+                <a
+                  href={`#${section.id}`}
+                  key={section.id}
+                  className={
+                    activeSection === section.id
+                      ? "is-active"
+                      : ""
+                  }
+                  aria-current={
+                    activeSection === section.id
+                      ? "location"
+                      : undefined
+                  }
+                  onClick={() =>
+                    setActiveSection(section.id)
+                  }
+                >
+                  <span>
+                    {String(index + 1).padStart(
+                      2,
+                      "0"
+                    )}
+                  </span>
+
+                  {section.heading}
+                </a>
+              ))}
+            </nav>
+
+            <div className="bs-article-sidebar__share">
+              <span>{text("blogDetails.article.share", "شارك هذه الفكرة")}</span>
+
+              <button
+                onClick={copyLink}
+                type="button"
+                aria-label="نسخ رابط المقال"
+              >
+                <Link2 size={17} />
+              </button>
+
+              <button
+                onClick={shareArticle}
+                type="button"
+                aria-label="مشاركة المقال"
+              >
+                <Share2 size={17} />
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* ARTICLE BODY */}
+
+        <article
+          id="bs-article-content"
+          className="bs-article-content"
+        >
+          <div className="bs-article-lead">
+            <span
+              className="bs-article-lead__mark"
+              aria-hidden="true"
+            >
+              “
+            </span>
+
+            <p>{post.lead}</p>
+          </div>
+
+          {post.sections.map((section, index) => (
+            <motion.section
+              id={section.id}
+              key={section.id}
+              className="bs-article-content-section"
+              initial={
+                reduced
+                  ? false
+                  : { opacity: 0, y: 22 }
+              }
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.12,
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="bs-article-section-index">
+                {String(index + 1).padStart(2, "0")}
+                {" / READING NOTES"}
+              </span>
+
+              <h2>{section.heading}</h2>
+
+              {section.paragraphs?.map(
+                (paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                )
+              )}
+
+              {section.bullets?.length > 0 && (
+                <ul>
+                  {section.bullets.map((bullet, i) => (
+                    <li key={i}>{bullet}</li>
+                  ))}
+                </ul>
+              )}
+
+              {section.quote && (
+                <blockquote>
+                  <span aria-hidden="true">
+                    “
+                  </span>
+
+                  {section.quote}
+                </blockquote>
+              )}
+            </motion.section>
+          ))}
+
+          {/* ENDING */}
+
+          <div className="bs-article-ending">
+            <Compass
+              size={35}
+              strokeWidth={1.2}
+            />
+
+            <p>
+              أغلقت الصفحة، لكن ربما بدأت الفكرة الآن.
+            </p>
+
+            <span>— بوصلة</span>
+          </div>
+
+          {/* SHARE BUTTONS */}
+
+          <div className="bs-article-bottom-actions">
+            <button
+              type="button"
+              onClick={copyLink}
+            >
+              <Copy size={17} />
+              {text("blogDetails.article.copyLink", "نسخ الرابط")}
+            </button>
+
+            <button
+              type="button"
+              onClick={shareArticle}
+            >
+              <Share2 size={17} />
+              مشاركة المقال
+            </button>
+
+            <a
+              href={`mailto:?subject=${encodeURIComponent(
+                post.title
+              )}&body=${encodeURIComponent(
+                typeof window === "undefined"
+                  ? ""
+                  : window.location.href
+              )}`}
+            >
+              <Mail size={17} />
+              أرسل لصديق
+            </a>
+          </div>
+
+          <p
+            className="bs-article-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {shareNotice && (
+              <>
+                <Check size={16} />
+                {shareNotice}
+              </>
+            )}
+          </p>
+        </article>
+      </section>
+
+      {/* RELATED ARTICLES */}
+
+      <section
+        className="bs-article-related"
+        aria-labelledby="bs-related-title"
+      >
+        <div className="container">
+          <div className="bs-article-related__heading">
+            <div>
+              <p>
+                <BookOpen size={17} />
+                واصل اكتشافك
+              </p>
+
+              <h2 id="bs-related-title">
+                {text("blogDetails.article.relatedTitle", "قد يعجبك أيضًا.")}
+              </h2>
+            </div>
+
+            <Link to="/blog">
+              كل المقالات
+              <ArrowLeft size={17} />
+            </Link>
+          </div>
+
+          <motion.div
+            className="bs-article-related__grid"
+            initial={reduced ? false : "hidden"}
+            whileInView="visible"
+            viewport={{
+              once: true,
+              amount: 0.15,
+            }}
+            transition={{
+              staggerChildren: 0.08,
+            }}
+          >
+            {related.map((item) => (
+              <BlogCard
+                key={item.slug}
+                post={item}
+                variant="compact"
+              />
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="container bs-article-back">
+        <Link to="/blog">
+          <ArrowUpLeft size={17} />
+          {text("blogDetails.article.back", "العودة إلى المدونة")}
+        </Link>
+
+        <Link to="/books">
+          اكتشف الكتب
+          <ArrowLeft size={17} />
+        </Link>
+      </div>
+    </main>
+  );
+}

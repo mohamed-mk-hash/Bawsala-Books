@@ -1,0 +1,1058 @@
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useParams,
+} from "react-router-dom";
+
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+} from "motion/react";
+
+import {
+  ArrowLeft,
+  ArrowUpLeft,
+  BookOpen,
+  Check,
+  ChevronLeft,
+  Compass,
+  Heart,
+  Minus,
+  Plus,
+  Share2,
+  ShoppingBag,
+  Sparkles,
+  Truck,
+  ShieldCheck,
+  RotateCcw,
+  Bookmark,
+  Package,
+  Copy,
+} from "lucide-react";
+
+import {
+  books,
+  categories,
+  formatPrice,
+} from "../../data/books.js";
+
+import {
+  useShop,
+} from "../../context/ShopContext.jsx";
+
+import BookCard, {
+  BookCover,
+} from "../../components/BookCard/BookCard.jsx";
+
+import NotFound from "../NotFound/NotFound.jsx";
+
+import "./BookDetails.css";
+
+/* ==========================================
+   ANIMATION VARIANTS
+========================================== */
+
+const fadeUp = {
+  hidden: {
+    opacity: 0,
+    y: 25,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const stagger = {
+  hidden: {},
+
+  visible: {
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+/* ==========================================
+   BOOK DETAILS PAGE
+========================================== */
+
+export default function BookDetails() {
+  const { id } = useParams();
+
+  const reducedMotion = useReducedMotion();
+
+  const {
+    cart,
+    favorites,
+    addToCart,
+    toggleFavorite,
+  } = useShop();
+
+  const [quantity, setQuantity] = useState(1);
+
+  const [activeTab, setActiveTab] = useState(
+    "description"
+  );
+
+  const [feedback, setFeedback] = useState("");
+
+  /* =====================================
+     GET BOOK BY ID
+  ===================================== */
+
+  const book = books.find(
+    (item) => item.id === Number(id)
+  );
+
+  const isFavorite = book
+    ? favorites.includes(book.id)
+    : false;
+
+  const cartQuantity = book
+    ? cart.find((item) => item.id === book.id)
+        ?.quantity || 0
+    : 0;
+
+  const availableQuantity = Math.max(
+    0,
+    99 - cartQuantity
+  );
+
+  /* =====================================
+     CATEGORY
+  ===================================== */
+
+  const category = book
+    ? categories.find(
+        (item) =>
+          item.id === book.categoryId
+      )
+    : null;
+
+  /* =====================================
+     RELATED BOOKS
+  ===================================== */
+
+  const relatedBooks = useMemo(() => {
+    if (!book) return [];
+
+    const sameCategory = books.filter(
+      (item) =>
+        item.id !== book.id &&
+        item.categoryId === book.categoryId
+    );
+
+    const otherBooks = books.filter(
+      (item) =>
+        item.id !== book.id &&
+        item.categoryId !== book.categoryId
+    );
+
+    return [
+      ...sameCategory,
+      ...otherBooks,
+    ].slice(0, 4);
+  }, [book]);
+
+  /* =====================================
+     DISCOUNT
+  ===================================== */
+
+  const discount =
+    book?.oldPrice > book?.price
+      ? Math.round(
+          (
+            (book.oldPrice - book.price) /
+            book.oldPrice
+          ) * 100
+        )
+      : 0;
+
+  /* =====================================
+     RESET WHEN BOOK CHANGES
+  ===================================== */
+
+  useEffect(() => {
+    setQuantity(1);
+    setActiveTab("description");
+    setFeedback("");
+  }, [id]);
+
+  /* =====================================
+     PAGE TITLE
+  ===================================== */
+
+  useEffect(() => {
+    if (!book) return;
+
+    const previousTitle = document.title;
+
+    document.title = `${book.title} | بوصلة للكتب`;
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [book]);
+
+  /* =====================================
+     FEEDBACK TIMEOUT
+  ===================================== */
+
+  useEffect(() => {
+    if (!feedback) return;
+
+    const timer = setTimeout(() => {
+      setFeedback("");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
+  /* =====================================
+     QUANTITY
+  ===================================== */
+
+  function increaseQuantity() {
+    setQuantity((previous) =>
+      Math.min(
+        Math.max(1, availableQuantity),
+        previous + 1
+      )
+    );
+  }
+
+  function decreaseQuantity() {
+    setQuantity((previous) =>
+      Math.max(1, previous - 1)
+    );
+  }
+
+  /* =====================================
+     ADD TO CART
+  ===================================== */
+
+  function handleAddToCart() {
+    if (!book || availableQuantity === 0) {
+      return;
+    }
+
+    const amount = Math.min(
+      quantity,
+      availableQuantity
+    );
+
+    addToCart(book.id, amount);
+
+    setFeedback(
+      `تمت إضافة ${amount} ${
+        amount === 1 ? "نسخة" : "نسخ"
+      } من «${book.title}» إلى السلة`
+    );
+
+    setQuantity(1);
+  }
+
+  /* =====================================
+     SHARE BOOK
+  ===================================== */
+
+  async function shareBook() {
+    if (!book) return;
+
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: book.title,
+          text: `اكتشف كتاب ${book.title} في بوصلة`,
+          url,
+        });
+
+        return;
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+
+      setFeedback("تم نسخ رابط الكتاب");
+    } catch {
+      setFeedback(
+        "تعذّر نسخ الرابط، يمكنك نسخه من شريط المتصفح"
+      );
+    }
+  }
+
+  /* =====================================
+     NOT FOUND
+  ===================================== */
+
+  if (!book) {
+    return <NotFound />;
+  }
+
+  /* =====================================
+     JSX
+  ===================================== */
+
+  return (
+    <main
+      id="main-content"
+      className="book-details-page"
+    >
+      {/* =================================
+          BREADCRUMB
+      ================================= */}
+
+      <div className="book-details-breadcrumb-wrap">
+        <div className="container">
+          <nav
+            className="book-details-breadcrumb"
+            aria-label="مسار الصفحة"
+          >
+            <Link to="/">
+              الرئيسية
+            </Link>
+
+            <ChevronLeft size={14} />
+
+            <Link to="/books">
+              جميع الكتب
+            </Link>
+
+            <ChevronLeft size={14} />
+
+            <Link
+              to={`/books?category=${book.categoryId}`}
+            >
+              {category?.label}
+            </Link>
+
+            <ChevronLeft size={14} />
+
+            <span aria-current="page">
+              {book.title}
+            </span>
+          </nav>
+        </div>
+      </div>
+
+      {/* =================================
+          MAIN PRODUCT SECTION
+      ================================= */}
+
+      <section className="book-details-section">
+        <div className="container book-details-layout">
+
+          {/* BOOK VISUAL */}
+
+          <motion.div
+            key={`visual-${book.id}`}
+            className="book-details-visual"
+            initial={
+              reducedMotion
+                ? false
+                : {
+                    opacity: 0,
+                    x: 30,
+                    scale: 0.96,
+                  }
+            }
+            animate={{
+              opacity: 1,
+              x: 0,
+              scale: 1,
+            }}
+            transition={{
+              duration: 0.75,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <div className="book-details-stage">
+
+              {/* DECORATION */}
+
+              <span className="book-details-stage-label">
+                BAWSALA BOOK COLLECTION
+              </span>
+
+              <div className="book-details-orbit orbit-one" />
+              <div className="book-details-orbit orbit-two" />
+
+              <span className="book-details-spark spark-one">
+                ✦
+              </span>
+
+              <span className="book-details-spark spark-two">
+                ✧
+              </span>
+
+              {/* BOOK COVER */}
+
+              <motion.div
+                className="book-details-cover"
+                whileHover={
+                  reducedMotion
+                    ? undefined
+                    : {
+                        y: -12,
+                        rotate: -2,
+                        scale: 1.025,
+                      }
+                }
+                transition={{
+                  duration: 0.4,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <BookCover book={book} />
+              </motion.div>
+
+              {/* FLOATING BADGE */}
+
+              <div className="book-details-floating">
+                <Compass
+                  size={22}
+                  strokeWidth={1.3}
+                />
+
+                <div>
+                  <span>مختارات بوصلة</span>
+                  <strong>رحلتك تبدأ هنا</strong>
+                </div>
+              </div>
+
+              <span className="book-details-stage-index">
+                THE READING EDIT — {String(
+                  book.id
+                ).padStart(2, "0")}
+              </span>
+            </div>
+
+            {/* NOTE */}
+
+            <div className="book-details-visual-note">
+              <Sparkles size={18} />
+
+              <p>
+                غلاف تصوري ضمن النسخة التجريبية
+                لمتجر بوصلة.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* =================================
+              BOOK INFORMATION
+          ================================= */}
+
+          <motion.div
+            key={`information-${book.id}`}
+            className="book-details-information"
+            variants={stagger}
+            initial={
+              reducedMotion
+                ? false
+                : "hidden"
+            }
+            animate="visible"
+          >
+
+            {/* CATEGORY */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-top"
+            >
+              <Link
+                className="book-details-category"
+                to={`/books?category=${book.categoryId}`}
+              >
+                <BookOpen size={16} />
+
+                {category?.label}
+              </Link>
+
+              <span className="book-details-reference">
+                REF. {String(book.id).padStart(4, "0")}
+              </span>
+            </motion.div>
+
+            {/* TITLE */}
+
+            <motion.div variants={fadeUp}>
+              <h1>{book.title}</h1>
+
+              <p className="book-details-author">
+                تأليف
+                <strong>{book.author}</strong>
+              </p>
+            </motion.div>
+
+            {/* TAG */}
+
+            {book.tag && (
+              <motion.div variants={fadeUp}>
+                <span className="book-details-tag">
+                  <Sparkles size={14} />
+                  {book.tag}
+                </span>
+              </motion.div>
+            )}
+
+            {/* DESCRIPTION */}
+
+            <motion.p
+              variants={fadeUp}
+              className="book-details-intro"
+            >
+              {book.description}
+            </motion.p>
+
+            {/* SMALL SPECS */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-quick-specs"
+            >
+              <div>
+                <BookOpen size={20} />
+
+                <span>
+                  الصفحات
+                  <strong>
+                    {book.pages || "غير محدد"}
+                  </strong>
+                </span>
+              </div>
+
+              <div>
+                <Bookmark size={20} />
+
+                <span>
+                  التصنيف
+                  <strong>
+                    {category?.label}
+                  </strong>
+                </span>
+              </div>
+            </motion.div>
+
+            {/* PRICE */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-price-box"
+            >
+              <span className="book-details-price-label">
+                سعر الكتاب
+              </span>
+
+              <div className="book-details-price-row">
+                <strong>
+                  <bdi>
+                    {formatPrice(book.price)}
+                  </bdi>
+                </strong>
+
+                {book.oldPrice && (
+                  <del>
+                    <bdi>
+                      {formatPrice(book.oldPrice)}
+                    </bdi>
+                  </del>
+                )}
+
+                {discount > 0 && (
+                  <span className="book-details-discount">
+                    خصم {discount}%
+                  </span>
+                )}
+              </div>
+
+              <p>
+                السعر تجريبي وقد يتغير عند
+                إضافة المخزون الفعلي.
+              </p>
+            </motion.div>
+
+            {/* =================================
+                QUANTITY AND CART
+            ================================= */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-purchase"
+            >
+              <div className="book-details-quantity-wrapper">
+                <label>
+                  الكمية
+                </label>
+
+                <div className="book-details-quantity">
+                  <button
+                    type="button"
+                    onClick={decreaseQuantity}
+                    disabled={quantity <= 1}
+                    aria-label="تقليل الكمية"
+                  >
+                    <Minus size={17} />
+                  </button>
+
+                  <span
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    {quantity}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={increaseQuantity}
+                    disabled={
+                      availableQuantity === 0 ||
+                      quantity >= availableQuantity
+                    }
+                    aria-label="زيادة الكمية"
+                  >
+                    <Plus size={17} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="book-details-add-cart"
+                onClick={handleAddToCart}
+                disabled={availableQuantity === 0}
+              >
+                <ShoppingBag size={20} />
+
+                {availableQuantity === 0
+                  ? "الحد الأقصى في السلة"
+                  : "أضف إلى السلة"}
+
+                <ArrowUpLeft size={19} />
+              </button>
+            </motion.div>
+
+            {/* ACTIONS */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-secondary-actions"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  toggleFavorite(book.id)
+                }
+                className={
+                  isFavorite ? "is-favorite" : ""
+                }
+                aria-pressed={isFavorite}
+              >
+                <Heart
+                  size={18}
+                  fill={
+                    isFavorite
+                      ? "currentColor"
+                      : "none"
+                  }
+                />
+
+                {isFavorite
+                  ? "إزالة من المفضلة"
+                  : "إضافة إلى المفضلة"}
+              </button>
+
+              <button
+                type="button"
+                onClick={shareBook}
+              >
+                <Share2 size={18} />
+
+                مشاركة الكتاب
+              </button>
+            </motion.div>
+
+            {/* FEEDBACK */}
+
+            <div
+              className="book-details-feedback-area"
+              role="status"
+              aria-live="polite"
+            >
+              <AnimatePresence mode="wait">
+                {feedback && (
+                  <motion.p
+                    key={feedback}
+                    className="book-details-feedback"
+                    initial={{
+                      opacity: 0,
+                      y: 10,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                    }}
+                  >
+                    <Check size={18} />
+                    {feedback}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* DELIVERY NOTES */}
+
+            <motion.div
+              variants={fadeUp}
+              className="book-details-benefits"
+            >
+              <div>
+                <Truck size={20} />
+                <span>معلومات التوصيل عند الطلب</span>
+              </div>
+
+              <div>
+                <ShieldCheck size={20} />
+                <span>تأكيد الطلب قبل الدفع</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* =================================
+          DETAILS TABS
+      ================================= */}
+
+      <section className="book-details-extra-section">
+        <div className="container">
+
+          <div className="book-details-extra-heading">
+            <p>
+              <span />
+              تعرّف أكثر
+            </p>
+
+            <h2>
+              تفاصيل تستحق <span>القراءة.</span>
+            </h2>
+          </div>
+
+          {/* TABS */}
+
+          <div
+            className="book-details-tabs"
+            role="tablist"
+            aria-label="معلومات الكتاب"
+          >
+            {[
+              ["description", "عن الكتاب"],
+              ["specifications", "معلومات الكتاب"],
+              ["shipping", "الطلب والتوصيل"],
+            ].map(([tab, label]) => (
+              <button
+                key={tab}
+                id={`book-tab-${tab}`}
+                role="tab"
+                type="button"
+                aria-selected={
+                  activeTab === tab
+                }
+                aria-controls="book-details-tab-panel"
+                tabIndex={
+                  activeTab === tab ? 0 : -1
+                }
+                className={
+                  activeTab === tab
+                    ? "is-active"
+                    : ""
+                }
+                onClick={() =>
+                  setActiveTab(tab)
+                }
+              >
+                {label}
+
+                {activeTab === tab && (
+                  <motion.span
+                    layoutId="book-tabs-indicator"
+                    className="book-details-tab-indicator"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* TAB CONTENT */}
+
+          <div
+            id="book-details-tab-panel"
+            role="tabpanel"
+            aria-labelledby={`book-tab-${activeTab}`}
+            className="book-details-tab-content"
+          >
+            <AnimatePresence mode="wait">
+              {activeTab === "description" && (
+                <motion.div
+                  key={`description-${book.id}`}
+                  initial={{
+                    opacity: 0,
+                    y: 15,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                  }}
+                  transition={{
+                    duration: 0.25,
+                  }}
+                >
+                  <h3>
+                    رحلة بين صفحات {book.title}
+                  </h3>
+
+                  <p>{book.description}</p>
+
+                  <p>
+                    اختر هذا الكتاب إذا كان موضوعه
+                    يثير فضولك، أو كنت ترغب في
+                    اكتشاف عالم جديد من الأفكار
+                    والحكايات.
+                  </p>
+
+                  <div className="book-details-quote">
+                    <Compass size={27} />
+
+                    <span>
+                      لأن كل كتاب يمكن أن يكون
+                      بداية لوجهة جديدة.
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "specifications" && (
+                <motion.div
+                  key={`specifications-${book.id}`}
+                  initial={{
+                    opacity: 0,
+                    y: 15,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                  }}
+                  transition={{
+                    duration: 0.25,
+                  }}
+                >
+                  <h3>البيانات الأساسية</h3>
+
+                  <div className="book-details-spec-table">
+                    <div>
+                      <span>عنوان الكتاب</span>
+                      <strong>{book.title}</strong>
+                    </div>
+
+                    <div>
+                      <span>المؤلف</span>
+                      <strong>{book.author}</strong>
+                    </div>
+
+                    <div>
+                      <span>التصنيف</span>
+                      <strong>{category?.label}</strong>
+                    </div>
+
+                    <div>
+                      <span>عدد الصفحات</span>
+                      <strong>
+                        {book.pages || "غير محدد"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>السعر</span>
+                      <strong>
+                        {formatPrice(book.price)}
+                      </strong>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "shipping" && (
+                <motion.div
+                  key={`shipping-${book.id}`}
+                  initial={{
+                    opacity: 0,
+                    y: 15,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                  }}
+                  transition={{
+                    duration: 0.25,
+                  }}
+                >
+                  <h3>
+                    الطلب والتوصيل
+                  </h3>
+
+                  <p>
+                    يمكنك حاليًا إضافة الكتب إلى
+                    سلتك وتعديل الكميات. هذه نسخة
+                    تجريبية من المتجر، ولم يتم
+                    تفعيل استقبال الطلبات بعد.
+                  </p>
+
+                  <p>
+                    عندما نضيف صفحة إتمام الطلب،
+                    سنعرض خيارات التوصيل والأسعار
+                    المتاحة حسب الولاية والعنوان،
+                    ثم نؤكد المجموع قبل إتمام الطلب.
+                  </p>
+
+                  <div className="book-details-shipping-cards">
+                    <div>
+                      <Package size={24} />
+                      <strong>تجهيز الطلب</strong>
+                      <span>سيُفعّل لاحقًا</span>
+                    </div>
+
+                    <div>
+                      <Truck size={24} />
+                      <strong>خيارات التوصيل</strong>
+                      <span>ستُحدد عند الطلب</span>
+                    </div>
+
+                    <div>
+                      <RotateCcw size={24} />
+                      <strong>سياسة الاسترجاع</strong>
+                      <span>ستُعلن عند الإطلاق</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================
+          RELATED BOOKS
+      ================================= */}
+
+      <section className="book-details-related-section">
+        <div className="container">
+
+          <div className="book-details-related-heading">
+            <div>
+              <p>
+                <Sparkles size={17} />
+                أكمل رحلتك
+              </p>
+
+              <h2>
+                كتب قد <span>تعجبك أيضًا.</span>
+              </h2>
+            </div>
+
+            <Link to="/books">
+              جميع الكتب
+              <ArrowLeft size={18} />
+            </Link>
+          </div>
+
+          <motion.div
+            key={`related-${book.id}`}
+            className="book-details-related-grid"
+            variants={stagger}
+            initial={
+              reducedMotion ? false : "hidden"
+            }
+            whileInView="visible"
+            viewport={{
+              once: true,
+              amount: 0.1,
+            }}
+          >
+            {relatedBooks.map((item) => (
+              <BookCard
+                key={item.id}
+                book={item}
+              />
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* =================================
+          BOTTOM CTA
+      ================================= */}
+
+      <section className="book-details-bottom">
+        <div className="container book-details-bottom-content">
+          <Compass
+            size={35}
+            strokeWidth={1.2}
+          />
+
+          <div>
+            <p>
+              ما زال هناك الكثير لتكتشفه
+            </p>
+
+            <h2>
+              لكل قارئ وجهته، ولكل وجهة كتاب.
+            </h2>
+          </div>
+
+          <Link to="/books">
+            العودة إلى المكتبة
+            <ArrowLeft size={18} />
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}

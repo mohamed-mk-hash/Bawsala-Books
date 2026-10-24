@@ -1,0 +1,659 @@
+
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "motion/react";
+
+import {
+  ArrowLeft,
+  ArrowUpLeft,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  Feather,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
+
+import {
+  blogCategories,
+  blogPosts,
+  formatBlogDate,
+  getBlogCategory,
+  normalizeBlogSearch,
+} from "../../data/blogs.js";
+
+import BlogCard from "../../components/BlogCard/BlogCard.jsx";
+import "./Blog.css";
+
+const PER_PAGE = 6;
+
+const entrance = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.075,
+      delayChildren: 0.03,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    transition: {
+      duration: 0.17,
+    },
+  },
+};
+
+export default function Blog() {
+  const [params, setParams] = useSearchParams();
+  const reduced = useReducedMotion();
+
+  const featured =
+    blogPosts.find((post) => post.featured) ||
+    blogPosts[0];
+
+  const requestedCategory =
+    params.get("category") || "all";
+
+  const category = blogCategories.some(
+    (item) => item.id === requestedCategory
+  )
+    ? requestedCategory
+    : "all";
+
+  const q = params.get("q") || "";
+
+  const sort =
+    params.get("sort") === "oldest"
+      ? "oldest"
+      : "latest";
+
+  const [searchValue, setSearchValue] = useState(q);
+
+  useEffect(() => {
+    setSearchValue(q);
+  }, [q]);
+
+  function updateFilters(changes) {
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+
+        Object.entries(changes).forEach(
+          ([key, value]) => {
+            if (
+              !value ||
+              value === "all" ||
+              (key === "sort" && value === "latest")
+            ) {
+              next.delete(key);
+            } else {
+              next.set(key, String(value));
+            }
+          }
+        );
+
+        next.delete("page");
+
+        return next;
+      },
+      { preventScrollReset: true }
+    );
+  }
+
+  const filtered = useMemo(() => {
+    const words = normalizeBlogSearch(q)
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const isDefault =
+      category === "all" && !words.length;
+
+    const matches = blogPosts.filter((post) => {
+      if (isDefault && post.id === featured.id) {
+        return false;
+      }
+
+      if (
+        category !== "all" &&
+        category !== post.category
+      ) {
+        return false;
+      }
+
+      const haystack = normalizeBlogSearch(
+        `${post.title} ${post.excerpt} ${post.author} ${post.lead}`
+      );
+
+      return words.every((word) =>
+        haystack.includes(word)
+      );
+    });
+
+    matches.sort((a, b) =>
+      sort === "latest"
+        ? b.publishedAt.localeCompare(a.publishedAt)
+        : a.publishedAt.localeCompare(b.publishedAt)
+    );
+
+    return matches;
+  }, [category, q, sort, featured.id]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / PER_PAGE)
+  );
+
+  const requestedPage = Number(
+    params.get("page") || 1
+  );
+
+  const page =
+    Number.isInteger(requestedPage) &&
+    requestedPage > 0
+      ? Math.min(totalPages, requestedPage)
+      : 1;
+
+  const shown = filtered.slice(
+    (page - 1) * PER_PAGE,
+    page * PER_PAGE
+  );
+
+  const animationKey = `${category}:${normalizeBlogSearch(
+    q
+  )}:${sort}:${page}`;
+
+  function goToPage(nextPage) {
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+
+        if (nextPage <= 1) {
+          next.delete("page");
+        } else {
+          next.set("page", String(nextPage));
+        }
+
+        return next;
+      },
+      { preventScrollReset: true }
+    );
+
+    document
+      .getElementById("blog-articles")
+      ?.scrollIntoView({
+        behavior: reduced ? "instant" : "smooth",
+        block: "start",
+      });
+  }
+
+  return (
+    <main id="main-content" className="bs-blog-page">
+      {/* HERO */}
+
+      <section
+        className="bs-blog-hero"
+        aria-labelledby="bs-blog-heading"
+      >
+        <div className="container bs-blog-hero__grid">
+          <motion.div
+            className="bs-blog-hero__intro"
+            initial={
+              reduced ? false : { opacity: 0, y: 26 }
+            }
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65 }}
+          >
+            <nav
+              className="bs-blog-breadcrumb"
+              aria-label="مسار الصفحة"
+            >
+              <Link to="/">الرئيسية</Link>
+              <ChevronLeft size={15} />
+              <span aria-current="page">المدونة</span>
+            </nav>
+
+            <p className="bs-blog-eyebrow">
+              <Feather size={17} />
+              مِن دفتر بوصلة
+              <span>—</span>
+              BEYOND THE PAGE
+            </p>
+
+            <h1 id="bs-blog-heading">
+              القراءة لا تنتهي
+              <br />
+              <em>عند آخر صفحة.</em>
+            </h1>
+
+            <p className="bs-blog-hero__description">
+              مساحة للأفكار التي تولد بين السطور؛ نحكي
+              عن الكتب، وعادات القراءة، وكل ما يجعلنا
+              نكتشف العالم من زاوية أخرى.
+            </p>
+
+            <a
+              href="#blog-articles"
+              className="bs-blog-hero__cta"
+            >
+              تصفّح المقالات
+              <ArrowLeft size={19} />
+            </a>
+
+            <div className="bs-blog-hero__signature">
+              <Compass
+                size={22}
+                strokeWidth={1.4}
+              />
+              <span>وجهات أخرى، تبدأ بكلمة.</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="bs-blog-hero__feature"
+            initial={
+              reduced
+                ? false
+                : {
+                    opacity: 0,
+                    scale: 0.94,
+                    x: -20,
+                  }
+            }
+            animate={{
+              opacity: 1,
+              scale: 1,
+              x: 0,
+            }}
+            transition={{
+              duration: 0.85,
+              delay: 0.13,
+            }}
+          >
+            <div
+              className="bs-blog-feature__halo"
+              aria-hidden="true"
+            />
+
+            <Link
+              className="bs-blog-feature__image"
+              to={`/blog/${featured.slug}`}
+              aria-label={`اقرأ المقال المميز: ${featured.title}`}
+            >
+              <img
+                src={featured.image}
+                alt={featured.imageAlt}
+                fetchPriority="high"
+                onError={(event) => {
+                  event.currentTarget.style.opacity =
+                    "0";
+                }}
+              />
+
+              <span className="bs-blog-feature__tag">
+                <Sparkles size={13} />
+                مقال تحت الضوء
+              </span>
+            </Link>
+
+            <div className="bs-blog-feature__caption">
+              <div className="bs-blog-feature__meta">
+                <span>
+                  {getBlogCategory(featured.category).label}
+                </span>
+                <span>
+                  {formatBlogDate(featured.publishedAt)}
+                </span>
+              </div>
+
+              <h2>
+                <Link to={`/blog/${featured.slug}`}>
+                  {featured.title}
+                </Link>
+              </h2>
+
+              <p>{featured.excerpt}</p>
+
+              <Link
+                className="bs-blog-feature__link"
+                to={`/blog/${featured.slug}`}
+              >
+                اكتشف المقال
+                <ArrowUpLeft size={17} />
+              </Link>
+            </div>
+
+            <span
+              className="bs-blog-hero__issue"
+              aria-hidden="true"
+            >
+              BAWSALA JOURNAL / 01
+            </span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* BLOG ARTICLES */}
+
+      <section
+        id="blog-articles"
+        className="bs-blog-section"
+        aria-labelledby="bs-blog-list-heading"
+      >
+        <div className="container">
+          <div className="bs-blog-section__heading">
+            <div>
+              <p className="bs-blog-eyebrow">
+                <BookOpen size={16} />
+                أحدث ما كُتب
+              </p>
+
+              <h2 id="bs-blog-list-heading">
+                أفكار تستحق <span>التوقّف.</span>
+              </h2>
+
+              <p>
+                اقرأ على مهل، واختر ما يشبه فضولك.
+              </p>
+            </div>
+
+            <span className="bs-blog-section__index">
+              THE JOURNAL
+              <b>↙</b>
+            </span>
+          </div>
+
+          {/* CATEGORIES */}
+
+          <div className="bs-blog-toolbar">
+            <div
+              className="bs-blog-categories"
+              aria-label="تصفية حسب موضوع المقال"
+            >
+              {blogCategories.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={
+                    category === item.id
+                      ? "is-active"
+                      : ""
+                  }
+                  aria-pressed={category === item.id}
+                  onClick={() =>
+                    updateFilters({
+                      category: item.id,
+                    })
+                  }
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* SEARCH & SORT */}
+
+            <div className="bs-blog-controls">
+              <form
+                className="bs-blog-search"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+
+                  updateFilters({
+                    q: searchValue.trim(),
+                  });
+                }}
+              >
+                <Search
+                  size={17}
+                  aria-hidden="true"
+                />
+
+                <label
+                  className="sr-only"
+                  htmlFor="bs-blog-search"
+                >
+                  ابحث في المقالات
+                </label>
+
+                <input
+                  id="bs-blog-search"
+                  type="search"
+                  placeholder="ابحث عن فكرة أو مقال..."
+                  value={searchValue}
+                  onChange={(event) =>
+                    setSearchValue(event.target.value)
+                  }
+                />
+
+                {searchValue && (
+                  <button
+                    className="bs-blog-search__clear"
+                    type="button"
+                    onClick={() => {
+                      setSearchValue("");
+                      updateFilters({ q: "" });
+                    }}
+                    aria-label="مسح البحث"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+
+                <button
+                  className="bs-blog-search__submit"
+                  type="submit"
+                >
+                  بحث
+                </button>
+              </form>
+
+              <label className="bs-blog-sort">
+                ترتيب
+
+                <select
+                  value={sort}
+                  onChange={(event) =>
+                    updateFilters({
+                      sort: event.target.value,
+                    })
+                  }
+                >
+                  <option value="latest">
+                    الأحدث أولًا
+                  </option>
+                  <option value="oldest">
+                    الأقدم أولًا
+                  </option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* RESULTS COUNT */}
+
+          <div
+            className="bs-blog-results-summary"
+            role="status"
+          >
+            <span>
+              {q
+                ? `نتائج البحث عن «${q}»`
+                : getBlogCategory(category).label}
+
+              <b> ({filtered.length})</b>
+            </span>
+
+            {(category !== "all" || q) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchValue("");
+                  setParams(
+                    new URLSearchParams(),
+                    { preventScrollReset: true }
+                  );
+                }}
+              >
+                مسح الفلاتر
+              </button>
+            )}
+          </div>
+
+          {/* ANIMATED GRID */}
+
+          <div className="bs-blog-results">
+            <AnimatePresence mode="wait" initial={false}>
+              {shown.length ? (
+                <motion.div
+                  key={`list-${animationKey}`}
+                  className="bs-blog-grid"
+                  variants={reduced ? undefined : entrance}
+                  initial={reduced ? false : "hidden"}
+                  animate={reduced ? undefined : "visible"}
+                  exit={
+                    reduced
+                      ? {
+                          opacity: 0,
+                          transition: { duration: 0 },
+                        }
+                      : "exit"
+                  }
+                >
+                  {shown.map((post) => (
+                    <BlogCard
+                      key={post.slug}
+                      post={post}
+                    />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`empty-${animationKey}`}
+                  className="bs-blog-empty"
+                  initial={
+                    reduced
+                      ? false
+                      : { opacity: 0, y: 14 }
+                  }
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Search size={36} />
+
+                  <h3>
+                    لم نجد مقالات بهذه الخيارات
+                  </h3>
+
+                  <p>
+                    جرّب عبارة مختلفة أو اختر تصنيفًا آخر.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={() => {
+                      setSearchValue("");
+                      setParams(
+                        new URLSearchParams(),
+                        { preventScrollReset: true }
+                      );
+                    }}
+                  >
+                    عرض كل المقالات
+                    <ArrowLeft size={17} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* PAGINATION */}
+
+          {totalPages > 1 && (
+            <nav
+              className="bs-blog-pagination"
+              aria-label="صفحات المدونة"
+            >
+              <button
+                type="button"
+                onClick={() => goToPage(page - 1)}
+                disabled={page === 1}
+                aria-label="الصفحة السابقة"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              {Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+              ).map((number) => (
+                <button
+                  type="button"
+                  key={number}
+                  onClick={() => goToPage(number)}
+                  className={
+                    number === page
+                      ? "is-active"
+                      : ""
+                  }
+                  aria-current={
+                    number === page
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  {number}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => goToPage(page + 1)}
+                disabled={page === totalPages}
+                aria-label="الصفحة التالية"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </nav>
+          )}
+
+          {/* CTA */}
+
+          <div className="bs-blog-bridge">
+            <span className="bs-blog-bridge__icon">
+              <Compass
+                size={34}
+                strokeWidth={1.2}
+              />
+            </span>
+
+            <div>
+              <p>من الفكرة إلى الكتاب</p>
+
+              <h2>
+                قرأت فكرة أعجبتك؟
+                <span> اكتشف كتابًا يكمّلها.</span>
+              </h2>
+            </div>
+
+            <Link
+              to="/books"
+              className="bs-blog-bridge__link"
+            >
+              اذهب إلى المكتبة
+              <ArrowUpLeft size={19} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
